@@ -35,10 +35,11 @@ func NewHTTPClientReverseProxy(baseURL *url.URL, timeout time.Duration, maxIdleC
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout:   timeout,
-			KeepAlive: timeout,
+			KeepAlive: 0,
 			DualStack: true,
 		}).DialContext,
 		MaxIdleConns:          maxIdleConns,
+		DisableKeepAlives:     true,
 		MaxIdleConnsPerHost:   maxIdleConnsPerHost,
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
