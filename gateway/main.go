@@ -177,6 +177,10 @@ func main() {
 	prometheusQuery := metrics.NewPrometheusQuery(config.PrometheusHost, config.PrometheusPort, &http.Client{})
 	faasHandlers.ListFunctions = metrics.AddMetricsHandler(faasHandlers.ListFunctions, prometheusQuery)
 	faasHandlers.Proxy = handlers.MakeCallIDMiddleware(faasHandlers.Proxy)
+	faasHandlers.AutoScale = handlers.MakeNotifierWrapper(
+		handlers.MakeAutoScaleHandler(externalServiceQuery, prometheusQuery, config.Namespace),
+		forwardingNotifiers,
+	)
 
 	faasHandlers.ScaleFunction = handlers.MakeForwardingProxyHandler(reverseProxy, forwardingNotifiers, urlResolver, nilURLTransformer, serviceAuthInjector)
 
@@ -216,6 +220,7 @@ func main() {
 
 	r.HandleFunc("/system/info", faasHandlers.InfoHandler).Methods(http.MethodGet)
 	r.HandleFunc("/system/alert", faasHandlers.Alert).Methods(http.MethodPost)
+	r.HandleFunc("/system/auto-scale", faasHandlers.AutoScale).Methods(http.MethodGet)
 
 	r.HandleFunc("/system/function/{name:["+NameExpression+"]+}", faasHandlers.QueryFunction).Methods(http.MethodGet)
 	r.HandleFunc("/system/functions", faasHandlers.ListFunctions).Methods(http.MethodGet)

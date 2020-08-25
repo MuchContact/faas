@@ -11,6 +11,7 @@ type HandlerSet struct {
 	DeleteFunction http.HandlerFunc
 	ListFunctions  http.HandlerFunc
 	Alert          http.HandlerFunc
+	AutoScale      http.HandlerFunc
 
 	UpdateFunction http.HandlerFunc
 
