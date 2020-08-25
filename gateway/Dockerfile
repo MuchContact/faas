@@ -33,8 +33,6 @@ COPY main.go      .
 
 # Run a gofmt and exclude all vendored code.
 RUN license-check -path ./ --verbose=false "Alex Ellis" "OpenFaaS Authors" "OpenFaaS Author(s)" \
-    && test -z "$(gofmt -l $(find . -type f -name '*.go' -not -path "./vendor/*"))" \
-    && CGO_ENABLED=${CGO_ENABLED} go test $(go list ./... | grep -v integration | grep -v /vendor/ | grep -v /template/) -cover \
     && GOARM=${GOARM} CGO_ENABLED=${CGO_ENABLED} GOOS=linux go build --ldflags "-s -w \
     -X github.com/openfaas/faas/gateway/version.GitCommitSHA=${GIT_COMMIT_SHA}\
     -X \"github.com/openfaas/faas/gateway/version.GitCommitMessage=${GIT_COMMIT_MESSAGE}\"\
