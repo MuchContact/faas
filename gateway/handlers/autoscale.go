@@ -8,20 +8,23 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/openfaas/faas/gateway/metrics"
 	"github.com/openfaas/faas/gateway/scaling"
 )
 
-var cooldownMap = make(map[string]time.Time)
+var cooldownMap sync.Map
 
 // MakeAlertHandler handles alerts from Prometheus Alertmanager
 func MakeAutoScaleHandler(service scaling.ServiceQuery, prometheusQuery metrics.PrometheusQueryFetcher, defaultNamespace string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		for key, val := range cooldownMap {
-			log.Printf("[AutoScale] function=%s cooldownStart: %s\n", key, val.String())
-		}
+		cooldownMap.Range(func(key, value interface{}) bool {
+			log.Printf("[AutoScale] function=%s cooldownStart: %s\n", key.(string), value.(string))
+			return true
+		})
+
 		errors := handleAutoScale(prometheusQuery, service, defaultNamespace)
 		if len(errors) > 0 {
 			log.Println(errors)
@@ -53,12 +56,12 @@ func handleAutoScale(queryFetcher metrics.PrometheusQueryFetcher, service scalin
 
 		// record 0 timestamp
 		if parsedVal == 0 {
-			if _, exists := cooldownMap[functionName]; !exists {
-				cooldownMap[functionName] = time.Now()
+			if _, exists := cooldownMap.Load(functionName); !exists {
+				cooldownMap.Store(functionName, time.Now())
 			}
 		} else {
-			if _, exists := cooldownMap[functionName]; exists {
-				delete(cooldownMap, functionName)
+			if _, exists := cooldownMap.Load(functionName); exists {
+				cooldownMap.Delete(functionName)
 			}
 		}
 
@@ -117,9 +120,9 @@ func calculateReplicas(functionName string, undoneTaskNum uint64, currentReplica
 
 // 判断函数是否过了静默期
 func cooldownTimeout(functionName string) bool {
-	val, exists := cooldownMap[functionName]
+	val, exists := cooldownMap.Load(functionName)
 	if exists {
-		return time.Since(val).Minutes() > 5
+		return time.Since(val.(time.Time)).Minutes() > 5
 	}
 	return false
 }

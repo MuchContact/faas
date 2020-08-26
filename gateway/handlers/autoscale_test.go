@@ -4,18 +4,24 @@
 package handlers
 
 import (
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestAutoScale(t *testing.T) {
-	var cooldownMap = make(map[string]time.Time)
-	cooldownMap["a"] = time.Now()
-	cooldownMap["c"] = time.Now()
-	//if _, ok := cooldownMap["a"]; ok {
-	//	t.Log(cooldownMap["a"])
-	//}
-	for key, val := range cooldownMap {
-		t.Logf("[AutoScale] function=%s cooldownStart: %s\n", key, val.String())
-	}
+	var mmap sync.Map
+	mmap.Store("key1", time.Now())
+
+	val, _ := mmap.Load("key1")
+
+	status := time.Since(val.(time.Time)).Minutes() > 5
+
+	t.Log(status)
+
+	mmap.Range(func(key, value interface{}) bool {
+		t.Log(key.(string) + ":" + value.(string))
+		return true
+	})
+
 }
