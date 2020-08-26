@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/openfaas/faas/gateway/metrics"
@@ -48,11 +47,6 @@ func handleAutoScale(queryFetcher metrics.PrometheusQueryFetcher, service scalin
 	}
 	for _, metric := range fetch.Data.Result {
 		functionName := metric.Metric.FunctionName
-		if index := strings.LastIndex(functionName, "."); index > -1 {
-			if functionName[index+1:] != "openfaas-fn" && functionName[index+1:] != "demo" {
-				continue
-			}
-		}
 
 		value := metric.Value[1]
 		parsedVal, _ := strconv.ParseUint(value.(string), 10, 64)
