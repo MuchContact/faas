@@ -21,7 +21,7 @@ var cooldownMap sync.Map
 func MakeAutoScaleHandler(service scaling.ServiceQuery, prometheusQuery metrics.PrometheusQueryFetcher, defaultNamespace string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cooldownMap.Range(func(key, value interface{}) bool {
-			log.Printf("[AutoScale] function=%s cooldownStart: %s\n", key.(string), value.(string))
+			log.Printf("[AutoScale] function=%s cooldownStart: %s\n", key.(string), value.(time.Time).String())
 			return true
 		})
 
@@ -54,7 +54,7 @@ func handleAutoScale(queryFetcher metrics.PrometheusQueryFetcher, service scalin
 
 		value := metric.Value[1]
 		parsedVal, _ := strconv.ParseUint(value.(string), 10, 64)
-		log.Printf("[AutoScale] get prometheus metric : %s %d \n", functionName, value)
+		log.Printf("[AutoScale] get prometheus metric : %s %s \n", functionName, value)
 
 		// record 0 timestamp
 		if parsedVal == 0 {
