@@ -20,7 +20,7 @@ func TestAutoScale(t *testing.T) {
 	t.Log(status)
 
 	mmap.Range(func(key, value interface{}) bool {
-		t.Log(key.(string) + ":" + value.(string))
+		t.Log(key.(string) + ":" + value.(time.Time).String())
 		return true
 	})
 

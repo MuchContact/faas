@@ -27,10 +27,11 @@ func MakeAutoScaleHandler(service scaling.ServiceQuery, prometheusQuery metrics.
 
 		errors := handleAutoScale(prometheusQuery, service, defaultNamespace)
 		if len(errors) > 0 {
+			log.Println("[AutoScale] errors: ")
 			log.Println(errors)
 			var errorOutput string
 			for d, err := range errors {
-				errorOutput += fmt.Sprintf("[%d] %s\n", d, err)
+				errorOutput += fmt.Sprintf("[AutoScale] [%d] %s\n", d, err)
 			}
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(errorOutput))
@@ -53,6 +54,7 @@ func handleAutoScale(queryFetcher metrics.PrometheusQueryFetcher, service scalin
 
 		value := metric.Value[1]
 		parsedVal, _ := strconv.ParseUint(value.(string), 10, 64)
+		log.Printf("[AutoScale] get prometheus metric : %s %d \n", functionName, value)
 
 		// record 0 timestamp
 		if parsedVal == 0 {
@@ -78,7 +80,7 @@ func autoScaleService(functionName string, undoneTaskNum uint64, service scaling
 	var err error
 
 	serviceName, namespace := getNamespace(defaultNamespace, functionName)
-
+	log.Printf("[AutoScale] reading replicas for function=%s.%s\n", serviceName, namespace)
 	if len(serviceName) > 0 {
 		queryResponse, getErr := service.GetReplicas(serviceName, namespace)
 		if getErr == nil {
@@ -94,6 +96,8 @@ func autoScaleService(functionName string, undoneTaskNum uint64, service scaling
 			if updateErr != nil {
 				err = updateErr
 			}
+		} else {
+			err = getErr
 		}
 	}
 	return err
