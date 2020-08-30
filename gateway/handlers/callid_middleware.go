@@ -5,6 +5,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -17,6 +18,7 @@ func MakeCallIDMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		start := time.Now()
 		if len(r.Header.Get("X-Call-Id")) == 0 {
 			callID := uuid.Generate().String()
+			log.Printf("MakeCallIDMiddleware generate call id : %s", callID)
 			r.Header.Add("X-Call-Id", callID)
 			w.Header().Add("X-Call-Id", callID)
 		}
