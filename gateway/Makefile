@@ -1,5 +1,5 @@
 .PHONY: all build push
-TAG?=0.20.1
+TAG?=0.19.6
 NS?=openfaas
 
 all:	build
