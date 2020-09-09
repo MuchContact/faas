@@ -61,8 +61,8 @@ func (ReadConfig) Read(hasEnv HasEnv) (*GatewayConfig, error) {
 
 	defaultDuration := time.Second * 8
 
-	cfg.ReadTimeout = parseIntOrDurationValue(hasEnv.Getenv("gateway_read_timeout"), defaultDuration)
-	cfg.WriteTimeout = parseIntOrDurationValue(hasEnv.Getenv("gateway_write_timeout"), defaultDuration)
+	cfg.ReadTimeout = parseIntOrDurationValue(hasEnv.Getenv("read_timeout"), defaultDuration)
+	cfg.WriteTimeout = parseIntOrDurationValue(hasEnv.Getenv("write_timeout"), defaultDuration)
 	cfg.UpstreamTimeout = parseIntOrDurationValue(hasEnv.Getenv("upstream_timeout"), defaultDuration)
 
 	if len(hasEnv.Getenv("functions_provider_url")) > 0 {
