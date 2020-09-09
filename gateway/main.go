@@ -69,8 +69,13 @@ func main() {
 	exporter.StartServiceWatcher(*config.FunctionsProviderURL, metricsOptions, "func", servicePollInterval)
 	metrics.RegisterExporter(exporter)
 
-	reverseProxy := types.NewHTTPClientReverseProxy(config.FunctionsProviderURL,
+	functionInvokeReverseProxy := types.NewHTTPClientReverseProxy(config.FunctionsProviderURL,
 		config.UpstreamTimeout,
+		config.MaxIdleConns,
+		config.MaxIdleConnsPerHost)
+
+	reverseProxy := types.NewKeepAliveHTTPClientReverseProxy(config.FunctionsProviderURL,
+		60*time.Second,
 		config.MaxIdleConns,
 		config.MaxIdleConnsPerHost)
 
@@ -112,7 +117,7 @@ func main() {
 
 	decorateExternalAuth := handlers.MakeExternalAuthHandler
 
-	faasHandlers.Proxy = handlers.MakeForwardingProxyHandler(reverseProxy, functionNotifiers, functionURLResolver, functionURLTransformer, nil)
+	faasHandlers.Proxy = handlers.MakeForwardingProxyHandler(functionInvokeReverseProxy, functionNotifiers, functionURLResolver, functionURLTransformer, nil)
 
 	faasHandlers.ListFunctions = handlers.MakeForwardingProxyHandler(reverseProxy, forwardingNotifiers, urlResolver, nilURLTransformer, serviceAuthInjector)
 	faasHandlers.DeployFunction = handlers.MakeForwardingProxyHandler(reverseProxy, forwardingNotifiers, urlResolver, nilURLTransformer, serviceAuthInjector)
